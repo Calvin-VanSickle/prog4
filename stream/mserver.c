@@ -23,7 +23,7 @@ int main() {
     memset((char *) &s_in, sizeof(s_in),0); 
     s_in.sin_family = (short)AF_INET;
     s_in.sin_addr.s_addr = htonl(INADDR_ANY);
-    s_in.sin_port = htons((unsigned short)5001);
+    s_in.sin_port = htons(0);
 
     // bind socket to a port
     int length = sizeof(s_in);

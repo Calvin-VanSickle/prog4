@@ -16,11 +16,12 @@
 typedef struct spawn_t{
 	int pipe[2];
 	int guesses;
-	char name[30];
+	char name[100];
 } spawn;
 
 
 int main(void){
+	char input[11] = {0};
 	spawn childs[101];
 	// to keep track of where our unused pipe spots are
 	int childi = 0;
@@ -35,7 +36,7 @@ int main(void){
     memset((char *) &s_in, sizeof(s_in),0); 
     s_in.sin_family = (short)AF_INET;
     s_in.sin_addr.s_addr = htonl(INADDR_ANY);
-    s_in.sin_port = htons((unsigned short)5001);
+    s_in.sin_port = htons((unsigned short)4545);
 
     // bind socket to a port
     int length = sizeof(s_in);
@@ -56,16 +57,19 @@ int main(void){
 	FD_SET(socket_fd,&read_set);
 	FD_SET(0,&read_set);
 	while(1){
-		//int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+		//int select(int nfds, fd_set *readfds, fd_set *writefds,
+		//					fd_set *exceptfds, struct timeval *timeout);
 		int num_active = select(socket_fd + 1, &read_set, NULL, NULL, NULL);
 		if( num_active > 1){
 			printf("select behaving wierd\n"); exit(1);
 		}
 		if(FD_ISSET(0,&read_set)){
-			// got somthing on 
-			printf("select got unplugged by stds in\n");
-			exit(1);
-			
+			fgets(input, 10, stdin);
+			if(strcmp("show",input) == 0){
+				
+			}else if(strcmp("exit",input) == 0){
+				exit(0);
+			}
 		}else if(FD_ISSET(socket_fd,&read_set)){
 			struct sockaddr_in s_out;
 			length = sizeof(s_out);
@@ -74,18 +78,35 @@ int main(void){
 			int conn_fd = accept(socket_fd, (struct sockaddr*)&s_out, &length);
 			if (conn_fd < 0) { perror("accept"); exit(1); }
 			
-			if(pipe(childs[childi].pipe)){
-				perror("pipin"); exit(1);
-			}
+			if(pipe(childs[childi].pipe)){perror("pipin"); exit(1);}
 			
-			printf("fork\n");
-			int cpid = fork();
+			int randomnum = (random() % 10) + 1;
+			int guess = 0;
+			
+			printf("randy: %i\n", randomnum);
+			// trying with out forking right now
+			/*int cpid = fork();
 			if(cpid){
 				//child
 				exit(1);
 			}else{
 				
-			}
+			}*/
+			read(conn_fd,childs[0].name, 80);
+			printf("%s\n",childs[0].name);
+			read(conn_fd,&guess, 4);
+			printf("guess: %i\n",ntohl(guess));
+			read(conn_fd,&guess, 4);
+			printf("guess: %i\n",ntohl(guess));
+			read(conn_fd,&guess, 4);
+			printf("guess: %i\n",ntohl(guess));
+			read(conn_fd,&guess, 4);
+			printf("guess: %i\n",ntohl(guess));
+			read(conn_fd,&guess, 4);
+			printf("guess: %i\n",ntohl(guess));
+			
+			exit(0);
+			
 			FD_SET(socket_fd,&read_set);
 		}else{
 			//must be one of our children dieing!
@@ -96,6 +117,9 @@ int main(void){
 		FD_ZERO(&read_set);
 		FD_SET(socket_fd,&read_set);
 		FD_SET(0,&read_set);
+		// look through our childs. only look at the ones which we could have
+		// used, and only set the ones which have't returned guesses and shut
+		// down yet
 		for(i = 0; i < childi; i++){
 			if(childs[i].guesses == 0){
 				FD_SET(childs[i].pipe[1],&read_set);

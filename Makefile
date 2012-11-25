@@ -1,7 +1,7 @@
 all:		server
 
 server		: server.c
-		gcc -std=c99 -o server server.c
+		gcc -std=gnu99 -o server server.c
 
 
 clean:
