@@ -16,7 +16,7 @@
 typedef struct spawn_t{
 	int pipe[2];
 	int guesses;
-	char name[100];
+	char name[33];
 } spawn;
 
 
@@ -36,7 +36,7 @@ int main(void){
     memset((char *) &s_in, sizeof(s_in),0); 
     s_in.sin_family = (short)AF_INET;
     s_in.sin_addr.s_addr = htonl(INADDR_ANY);
-    s_in.sin_port = htons((unsigned short)4545);
+    s_in.sin_port = htons(0);
 
     // bind socket to a port
     int length = sizeof(s_in);
@@ -84,6 +84,7 @@ int main(void){
 			int guess = 0;
 			
 			printf("randy: %i\n", randomnum);
+			
 			// trying with out forking right now
 			/*int cpid = fork();
 			if(cpid){
@@ -92,18 +93,17 @@ int main(void){
 			}else{
 				
 			}*/
-			read(conn_fd,childs[0].name, 80);
-			printf("%s\n",childs[0].name);
+			read(conn_fd,childs[0].name, 32);
+			printf("\nname: %s\n",childs[0].name);
 			read(conn_fd,&guess, 4);
 			printf("guess: %i\n",ntohl(guess));
-			read(conn_fd,&guess, 4);
-			printf("guess: %i\n",ntohl(guess));
-			read(conn_fd,&guess, 4);
-			printf("guess: %i\n",ntohl(guess));
-			read(conn_fd,&guess, 4);
-			printf("guess: %i\n",ntohl(guess));
-			read(conn_fd,&guess, 4);
-			printf("guess: %i\n",ntohl(guess));
+			while(guess != randomnum){
+				int resp = htonl(ntohl(guess)>randomnum?1:ntohl(guess)<randomnum?-1:0);
+				printf(" resp: %i\n", ntohl(guess)>randomnum?1:ntohl(guess)<randomnum?-1:0);
+				write(conn_fd, &resp, 4);
+				read(conn_fd,&guess, 4);
+				printf("guess: %i\n",ntohl(guess));
+			}
 			
 			exit(0);
 			
